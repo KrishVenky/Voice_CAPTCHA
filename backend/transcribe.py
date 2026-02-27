@@ -43,8 +43,9 @@ def transcribe_audio(audio_bytes: bytes) -> str:
         print(f"[WHISPER] Saved to temp file: {temp_file_path}")
         print(f"[WHISPER] Starting transcription...")
         
-        # Transcribe the audio file using the Whisper model
-        result = model.transcribe(temp_file_path)
+        # Transcribe the audio file using Whisper
+        # Whisper handles audio loading internally via ffmpeg
+        result = model.transcribe(temp_file_path, fp16=False)
         
         transcript = result["text"].strip()
         print(f"[WHISPER] Transcription complete: '{transcript}'")
