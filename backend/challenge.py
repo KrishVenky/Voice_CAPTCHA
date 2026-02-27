@@ -106,11 +106,16 @@ def verify_answer(transcript: str, challenge_data: dict) -> bool:
               Returns True on error to avoid breaking the demo
     """
     try:
+        print(f"[GEMINI VERIFY] Transcript received: '{transcript}'")
+        print(f"[GEMINI VERIFY] Challenge data: {challenge_data}")
+        
         # Validate inputs - return False if empty or None
         if not transcript:
+            print(f"[GEMINI VERIFY] Transcript is empty, returning False")
             return False
         
         if not challenge_data:
+            print(f"[GEMINI VERIFY] Challenge data is empty, returning False")
             return False
         
         # Build the verification prompt for Gemini
@@ -120,20 +125,31 @@ def verify_answer(transcript: str, challenge_data: dict) -> bool:
    Did the user answer correctly? 
    Reply with only the single word YES or NO"""
         
+        print(f"[GEMINI VERIFY] Sending prompt to Gemini...")
+        
         # Send the verification prompt to Gemini
         response = model.generate_content(verification_prompt)
         
         # Check if YES or NO appears in the response
         response_upper = response.text.upper()
         
+        print(f"[GEMINI VERIFY] Gemini response: '{response.text}'")
+        print(f"[GEMINI VERIFY] Response uppercase: '{response_upper}'")
+        
         if "YES" in response_upper:
+            print(f"[GEMINI VERIFY] Result: TRUE (answer correct)")
             return True
         if "NO" in response_upper:
+            print(f"[GEMINI VERIFY] Result: FALSE (answer incorrect)")
             return False
         
         # If neither YES nor NO found, default to True
+        print(f"[GEMINI VERIFY] Warning: No YES/NO found, defaulting to TRUE")
         return True
         
-    except Exception:
+    except Exception as e:
         # If anything fails, return True to not break the demo
+        print(f"[GEMINI VERIFY ERROR] Exception: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return True

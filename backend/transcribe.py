@@ -29,6 +29,8 @@ def transcribe_audio(audio_bytes: bytes) -> str:
     temp_file_path = None
     
     try:
+        print(f"[WHISPER] Received audio bytes: {len(audio_bytes)} bytes")
+        
         # Create a named temporary file with .wav extension
         # delete=False means we manually control when it's deleted
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
@@ -38,17 +40,28 @@ def transcribe_audio(audio_bytes: bytes) -> str:
             # Store the file path for use after closing
             temp_file_path = temp_file.name
         
+        print(f"[WHISPER] Saved to temp file: {temp_file_path}")
+        print(f"[WHISPER] Starting transcription...")
+        
         # Transcribe the audio file using the Whisper model
         result = model.transcribe(temp_file_path)
         
-        # Extract and return the transcribed text
-        return result["text"].strip()
+        transcript = result["text"].strip()
+        print(f"[WHISPER] Transcription complete: '{transcript}'")
+        print(f"[WHISPER] Full result: {result}")
         
-    except Exception:
+        # Extract and return the transcribed text
+        return transcript
+        
+    except Exception as e:
         # If anything fails, return empty string
+        print(f"[WHISPER ERROR] Transcription failed: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return ""
         
     finally:
         # Always clean up the temporary file, whether success or failure
         if temp_file_path and os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
+            print(f"[WHISPER] Cleaned up temp file")

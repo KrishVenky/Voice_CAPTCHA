@@ -17,90 +17,134 @@ const signalPanel = document.getElementById("signal-panel");
 const resultDiv = document.getElementById("result");
 const statusIcon = document.getElementById("status-icon");
 
+// Debug: Verify DOM elements are found
+console.log("DOM Elements loaded:", {
+    startBtn: !!startBtn,
+    challengeText: !!challengeText,
+    signalPanel: !!signalPanel,
+    resultDiv: !!resultDiv,
+    statusIcon: !!statusIcon
+});
+
 /**
  * Load a new CAPTCHA challenge from the backend
  */
 async function loadChallenge() {
-    // Fetch challenge from backend API
-    const response = await fetch(`${API}/challenge`);
-    const data = await response.json();
-    
-    // Store the challenge ID for later verification
-    challengeId = data.id;
-    
-    // Display the challenge text to the user
-    challengeText.textContent = data.challenge;
-    
-    // Update button to allow user to speak their answer
-    startBtn.textContent = "🎤 Speak Your Answer";
-    startBtn.onclick = startRecording;
+    try {
+        // Fetch challenge from backend API
+        const response = await fetch(`${API}/challenge`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log("Challenge loaded:", data);
+        
+        // Store the challenge ID for later verification
+        challengeId = data.id;
+        
+        // Display the challenge text to the user
+        challengeText.textContent = data.challenge;
+        
+        // Update button to allow user to speak their answer
+        startBtn.textContent = "🎤 Speak Your Answer";
+        startBtn.onclick = startRecording;
+    } catch (error) {
+        console.error("Error loading challenge:", error);
+        challengeText.textContent = "Error loading challenge. Check console.";
+        alert("Error: " + error.message);
+    }
 }
 
 /**
  * Start recording audio from the user's microphone
  */
 async function startRecording() {
-    // Request microphone access from the browser
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    // Create a MediaRecorder to capture audio
-    mediaRecorder = new MediaRecorder(stream);
-    
-    // Reset audio chunks array for new recording
-    audioChunks = [];
-    
-    // Collect audio data as it becomes available
-    mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
-    };
-    
-    // Submit audio when recording stops
-    mediaRecorder.onstop = submitAudio;
-    
-    // Record the start time for latency calculation
-    recordStart = Date.now();
-    
-    // Start the recording
-    mediaRecorder.start();
-    
-    // Update UI to show recording in progress
-    statusIcon.textContent = "⏺";
-    startBtn.textContent = "Stop Recording";
-    startBtn.onclick = () => mediaRecorder.stop();
+    try {
+        // Request microphone access from the browser
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        console.log("Microphone access granted");
+        
+        // Create a MediaRecorder to capture audio
+        mediaRecorder = new MediaRecorder(stream);
+        
+        // Reset audio chunks array for new recording
+        audioChunks = [];
+        
+        // Collect audio data as it becomes available
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+        
+        // Submit audio when recording stops
+        mediaRecorder.onstop = submitAudio;
+        
+        // Record the start time for latency calculation
+        recordStart = Date.now();
+        
+        // Start the recording
+        mediaRecorder.start();
+        
+        // Update UI to show recording in progress
+        statusIcon.textContent = "⏺";
+        startBtn.textContent = "Stop Recording";
+        startBtn.onclick = () => mediaRecorder.stop();
+    } catch (error) {
+        console.error("Error starting recording:", error);
+        alert("Microphone access denied or error: " + error.message);
+        challengeText.textContent = "Please allow microphone access";
+    }
 }
 
 /**
  * Submit recorded audio to backend for verification
  */
 async function submitAudio() {
-    // Calculate response latency in milliseconds
-    const latency = Date.now() - recordStart;
-    
-    // Create audio blob from recorded chunks
-    const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-    
-    // Prepare form data for multipart upload
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "response.wav");
-    formData.append("challenge_id", challengeId);
-    formData.append("latency_ms", latency.toString());
-    
-    // Update UI to show verification in progress
-    challengeText.textContent = "Verifying...";
-    statusIcon.textContent = "⏳";
-    signalPanel.style.display = "block";
-    
-    // Submit to backend verification endpoint
-    const response = await fetch(`${API}/verify`, {
-        method: "POST",
-        body: formData
-    });
-    
-    // Parse verification result
-    const data = await response.json();
-    
-    // Display the verification results
-    showResult(data, latency);
+    try {
+        // Calculate response latency in milliseconds
+        const latency = Date.now() - recordStart;
+        
+        // Create audio blob from recorded chunks
+        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+        
+        console.log("Submitting audio, latency:", latency, "ms");
+        
+        // Prepare form data for multipart upload
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "response.wav");
+        formData.append("challenge_id", challengeId);
+        formData.append("latency_ms", latency.toString());
+        
+        // Update UI to show verification in progress
+        challengeText.textContent = "Verifying...";
+        statusIcon.textContent = "⏳";
+        signalPanel.style.display = "block";
+        
+        // Submit to backend verification endpoint
+        const response = await fetch(`${API}/verify`, {
+            method: "POST",
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Parse verification result
+        const data = await response.json();
+        
+        console.log("Verification result:", data);
+        
+        // Display the verification results
+        showResult(data, latency);
+    } catch (error) {
+        console.error("Error submitting audio:", error);
+        challengeText.textContent = "Error verifying. Check console.";
+        alert("Error during verification: " + error.message);
+    }
 }
 
 /**
@@ -155,3 +199,5 @@ function showResult(data, latency) {
 
 // Initialize the CAPTCHA widget on page load
 startBtn.onclick = loadChallenge;
+
+console.log("Voice CAPTCHA initialized. Click 'Verify I'm Human' to start.");

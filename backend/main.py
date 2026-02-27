@@ -75,43 +75,66 @@ async def verify_submission(
     # Read the audio file bytes
     audio_bytes = await audio.read()
     
+    print(f"\n{'='*60}")
+    print(f"[MAIN] NEW VERIFICATION REQUEST")
+    print(f"[MAIN] Challenge ID: {challenge_id}")
+    print(f"[MAIN] Latency: {latency_ms}ms")
+    print(f"[MAIN] Audio size: {len(audio_bytes)} bytes")
+    print(f"{'='*60}\n")
+    
     # LAYER 2: Latency verification (check response timing first)
     # Valid human response time should be between 400ms and 6000ms
+    print(f"[LAYER 2] Checking latency: {latency_ms}ms")
     if latency_ms < 400 or latency_ms > 6000:
+        print(f"[LAYER 2] FAILED - Latency out of range (400-6000ms)")
         return {
             "pass": False,
             "reason": "latency_anomaly",
             "latency_ms": latency_ms
         }
+    print(f"[LAYER 2] PASSED - Latency within range\n")
     
     # LAYER 1: Answer correctness verification
     # Transcribe the audio to text
+    print(f"[LAYER 1] Starting transcription...")
     transcript = transcribe_audio(audio_bytes)
+    print(f"[LAYER 1] Transcript result: '{transcript}'\n")
     
     # Retrieve the challenge data from memory
     challenge_data = challenges.get(challenge_id, {})
+    print(f"[LAYER 1] Retrieved challenge: {challenge_data}")
     
     # Verify if the transcribed answer is correct
+    print(f"[LAYER 1] Verifying answer with Gemini...")
     correct = verify_answer(transcript, challenge_data)
     
     if not correct:
+        print(f"[LAYER 1] FAILED - Answer incorrect")
+        print(f"{'='*60}\n")
         return {
             "pass": False,
             "reason": "wrong_answer",
             "transcript": transcript
         }
+    print(f"[LAYER 1] PASSED - Answer correct\n")
     
     # LAYER 3: Voice authenticity verification
     # Check if the voice is synthetic or AI-generated
+    print(f"[LAYER 3] Checking voice authenticity...")
     synthetic = is_synthetic(audio_bytes)
     
     if synthetic:
+        print(f"[LAYER 3] FAILED - Voice is synthetic")
+        print(f"{'='*60}\n")
         return {
             "pass": False,
             "reason": "synthetic_voice"
         }
+    print(f"[LAYER 3] PASSED - Voice is human\n")
     
     # All three layers passed - verification successful
+    print(f"[SUCCESS] All three layers passed!")
+    print(f"{'='*60}\n")
     return {
         "pass": True,
         "transcript": transcript,
