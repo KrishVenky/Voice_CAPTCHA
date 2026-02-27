@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+bot_answer.wav
+*.wav
+.venv/
+venv/
+node_modules/

@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+google-generativeai
+openai-whisper
+librosa
+numpy
+scikit-learn
+soundfile
+python-multipart
+pyttsx3
+torch
