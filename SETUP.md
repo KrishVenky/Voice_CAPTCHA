@@ -6,7 +6,10 @@
 In the root folder (`voice-captcha`), create a file named `.env` (no extension) with:
 ```
 GEMINI_API_KEY=paste_the_key_here
+DEMO_MODE=false
 ```
+
+**For video demos (no API calls):** Set `DEMO_MODE=true` to bypass Gemini API and auto-pass all layers
 
 ### Step 2: Install dependencies
 ```powershell
