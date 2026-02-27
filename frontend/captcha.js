@@ -169,7 +169,9 @@ function showResult(data, latency) {
         statusIcon.textContent = "✅";
         resultDiv.innerHTML = '<div class="pass">✅ Human Verified — Proceed</div>';
         
-        // Enable submit button to allow form submission
+        // Enable form inputs and submit button to allow form submission
+        document.getElementById("name").disabled = false;
+        document.getElementById("email").disabled = false;
         document.querySelector(".submit-btn").disabled = false;
     } else {
         // Handle different failure reasons
@@ -199,5 +201,20 @@ function showResult(data, latency) {
 
 // Initialize the CAPTCHA widget on page load
 startBtn.onclick = loadChallenge;
+
+// Handle form submission
+document.querySelector(".submit-btn").onclick = function() {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    
+    if (!name || !email) {
+        alert("Please fill in all fields");
+        return;
+    }
+    
+    // In a real application, you would submit to your backend here
+    console.log("Form submitted:", { name, email });
+    alert(`Account created successfully!\n\nName: ${name}\nEmail: ${email}\n\nThis is a demo - no actual account was created.`);
+};
 
 console.log("Voice CAPTCHA initialized. Click 'Verify I'm Human' to start.");
