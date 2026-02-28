@@ -2,6 +2,7 @@ fastapi
 uvicorn
 google-generativeai
 openai-whisper
+openai
 librosa
 numpy
 scikit-learn
